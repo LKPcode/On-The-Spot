@@ -9,14 +9,44 @@ class BinanceAPI:
 
     def __init__(self):
         #Real Binance
-        api_key = "E4oc2oefwzU8P3jpRJXYkaMN52CKsa4N7xvCqpym1crufaCtFncZLuUi0HuCeSQ1"
-        api_secret = "a1AsNCLH0KEtwSd7lGQ7BeBcgpUEzYV2mAiNzTgAEqFJcbCdZ6xdhSq08uJPPQam"
+        self.api_key = ""
+        self.api_secret = ""
+        self.setKeys()
+        self.testnet = False
+        
         #Testent Binance
         # api_key = "DazYFin7onDM9jLQIYlo372ntGjF81aOkn7l8Pe9m0OcRzTTnOIdeRnyMCOq4E8O"
         # api_secret = "8eLuStULGTwIeAIg2u4mlpkoB4sBbEPvOso9dkSNe017ZHqQopBEn8jtTSQ1lIbz"
-        self.client = Client(api_key, api_secret)#, testnet=True)
+        self.client = Client(self.api_key, self.api_secret, testnet=self.testnet)
 
-        
+    def saveNewKeys(self, api_key, api_secret):
+        content = {
+                    "keys": {
+                        "api_key": api_key,
+                        "api_secret": api_secret 
+                    }
+                }
+        print("Save Keys: ",content)
+        file = open("keys.json", "w")
+        file.write(json.dumps(content, indent=4))  
+        file.close()
+        self.setKeys()
+        self.client = Client(self.api_key, self.api_secret, testnet=self.testnet)
+        return "Keys Saved" 
+
+    def setKeys(self):
+        file = open("keys.json")
+        content = json.load(file)
+        file.close()
+        self.api_key = content["keys"]["api_key"] 
+        self.api_secret = content["keys"]["api_secret"]
+
+        print("Keys Set: ",self.api_key,  self.api_secret )
+
+    def getKeys(self):
+        file = open("keys.json") 
+        return json.load(file)
+
 
     def get_spot_wallet_balances(self):
         balances = self.client.get_account()["balances"]
@@ -104,7 +134,7 @@ class BinanceAPI:
                 )
 
         except BinanceAPIException as s:
-            res = {"message" : s , "type": "BinanceAPIException"}
+            res = {"message" : str(s) , "type": "BinanceAPIException"}
             print(res)
             return res 
 
@@ -162,7 +192,7 @@ class BinanceAPI:
                 )
 
         except BinanceAPIException as s:
-           res = {"message" : s , "type": "BinanceAPIException"}
+           res = {"message" : str(s) , "type": "BinanceAPIException"}
            print(res)
            return res 
             
@@ -290,13 +320,16 @@ class BinanceAPI:
         #create swap Dicts
         sell_swaps = []
         target_coin = aggrigation_coin
+        target_coin_amount = 0
         for asset in sell:
-            
-            sell_swaps.append({
-                "sell": asset["asset"],
-                 "buy": target_coin,
-                "amount": asset["amount"]
-            })
+            if asset["asset"] == target_coin:
+                target_coin_amount = asset["amount"]
+            else:   
+                sell_swaps.append({
+                    "sell": asset["asset"],
+                    "buy": target_coin,
+                    "amount": asset["amount"]
+                })
 
         sell_responses = []
         for swap in sell_swaps:
@@ -304,9 +337,10 @@ class BinanceAPI:
 
         print(sell_responses)
 
-        value_sold = sum(float(res[-1]["cummulativeQuoteQty"]) for res in sell_responses)
-        print(self.price_convertion(target_coin,"BUSD",  value_sold))
-
+        if all([ isinstance(res, list) for res in sell_responses]):
+            value_sold = sum(float(res[-1]["cummulativeQuoteQty"]) for res in sell_responses) + target_coin_amount
+            print(self.price_convertion(target_coin,"BUSD",  value_sold))
+        else: return {"status": "error", "message": "An error occured while executing sell orders",  "errors": sell_responses }
         buy_swaps = []
         for asset in buy:
             buy_swaps.append({"sell":target_coin, "buy":asset["asset"] , "amount":  value_sold * asset["percent"] / 100  })
@@ -314,10 +348,15 @@ class BinanceAPI:
         buy_responses = []
         for swap in buy_swaps:
             buy_responses.append(self.execute_swap(swap))
-
         print(buy_responses)
 
-        return {"sell_responses": sell_responses, "buy_responses":buy_responses}
+        if all([ isinstance(res, list) for res in buy_responses]):
+            value_sold = sum(float(res[-1]["cummulativeQuoteQty"]) for res in buy_responses) + target_coin_amount
+            print(self.price_convertion(target_coin,"BUSD",  value_sold))
+        else: return {"status": "error", "message": "An error occured while executing buy orders", "errors": buy_responses }
+
+
+        return {"sell_responses": sell_responses, "buy_responses":buy_responses, "status": "ok", "message": "Swap was successful"}
 
 
 
