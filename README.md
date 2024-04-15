@@ -17,7 +17,15 @@ On The Spot is a web application that makes spot trading on Binance easier. It a
 * With On-The-Spot you can think in a percentage of your portfolio instead of the amount of each cryptocurrency you have. This way you can easily reallocate your funds without having to calculate the amount of each cryptocurrency.
 * In just one click you are able to sell all your crypto for a stablecoin. No need to do it manually for each pair.
 
+### Tech Stack
+
+* Vue2.js / CSS Only / HTML - **Frontend**
+* Python3 / Flask - **Backend**
+* Binance Spot API - **Trading**
+
 ## The App
+
+
 
 
 https://github.com/LKPcode/On-The-Spot/assets/36119007/5f6e7541-33d9-4416-8f2e-9ec064eefd3f
