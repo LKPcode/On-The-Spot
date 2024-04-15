@@ -19,9 +19,15 @@ On The Spot is a web application that makes spot trading on Binance easier. It a
 
 ## The App
 
-https://github.com/LKPcode/On-The-Spot/blob/main/screenshots/video-1643918912.mp4
 
-./screenshots/video-1644438452.mp4
+https://github.com/LKPcode/On-The-Spot/assets/36119007/5f6e7541-33d9-4416-8f2e-9ec064eefd3f
+
+
+
+https://github.com/LKPcode/On-The-Spot/assets/36119007/753abc28-d707-4d3c-9723-201407f08303
+
+
+
 
 
 
